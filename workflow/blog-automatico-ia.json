@@ -1,0 +1,586 @@
+{
+  "name": "Blog automático IA",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyHour"
+            }
+          ]
+        },
+        "feedUrl": "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/tecnologia/portada"
+      },
+      "type": "n8n-nodes-base.rssFeedReadTrigger",
+      "typeVersion": 1,
+      "position": [
+        -272,
+        -16
+      ],
+      "id": "9e7db237-26f0-4101-aec3-945c901f512e",
+      "name": "RSS Feed Trigger"
+    },
+    {
+      "parameters": {
+        "title": "={{ $('RSS Feed Trigger').item.json.title }}",
+        "additionalFields": {
+          "content": "={{ $('Groq').item.json.choices[0].message.content }}",
+          "status": "draft",
+          "categories": "={{ [$json.categoria] }}"
+        }
+      },
+      "type": "n8n-nodes-base.wordpress",
+      "typeVersion": 1,
+      "position": [
+        1024,
+        -16
+      ],
+      "id": "e1b5473e-f6d6-455f-9231-e358d39f0146",
+      "name": "Create a post",
+      "credentials": {
+        "wordpressApi": {
+          "name": "Wordpress account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "TU_CHAT_ID",
+        "text": "=📝 Nuevo borrador #{{ $('Create a post').item.json.id }}: {{ $('Create a post').item.json.title.rendered }}\n\n✅ Verificado: no hay datos que no estén en la fuente.\n\nRevísalo: http://localhost:8080/wp-admin/post.php?post={{ $('Create a post').item.json.id }}&action=edit",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1584,
+        80
+      ],
+      "id": "f9182204-3a9a-4f9c-a418-f46cc57a8151",
+      "name": "Telegram- Avisar borrador",
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('RSS Feed Trigger').item.json.title }}",
+                    "rightValue": "\\bIA\\b|[Ii]nteligencia [Aa]rtificial",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    },
+                    "id": "6b57023b-0a98-45b0-9c45-7fbe52448f1b"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "IA"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "id": "c45d4615-a47c-477b-9449-5a9dcf7e7539",
+                    "leftValue": "={{ $('RSS Feed Trigger').item.json.title }}",
+                    "rightValue": "\\b[Dd]atos\\b|[Bb]ig [Dd]ata",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Big Data"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.5,
+      "position": [
+        592,
+        -32
+      ],
+      "id": "72cff761-336f-4e5c-8383-597aa794dda1",
+      "name": "Switch categorias"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7ec52c6d-1407-4371-977c-ad92eb35bbd7",
+              "name": "categoria",
+              "value": 2,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        832,
+        -160
+      ],
+      "id": "e9a0cbce-6d5b-438a-b0a8-59326d509eaf",
+      "name": "Cat IA"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "817f2392-6945-48b6-96f6-02f150d4d8e4",
+              "name": "categoria",
+              "value": "3",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        832,
+        -16
+      ],
+      "id": "c2814638-18dd-4bdc-a8a5-d5e2231601d6",
+      "name": "Cat BD"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "692ba31f-42cf-471d-b7e6-c78d3a150613",
+              "name": "categoria",
+              "value": 4,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        832,
+        144
+      ],
+      "id": "d320e9be-43e2-462f-8958-406828d82241",
+      "name": "Cat Tecno"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  model: \"openai/gpt-oss-20b\",\n  messages: [\n    { role: \"system\", content: \"Eres un redactor de blog profesional. Reescribe el siguiente artículo de manera atractiva para un blog de empresa sobre IA. Usa un tono profesional pero cercano. Máximo 300 palabras. Responde en español. Devuelve solo el texto en HTML sencillo (<p>, <h2>, <strong>), sin Markdown ni asteriscos.\" },\n    { role: \"user\", content: \"Título: \" + $json.title + \"\\n\\nContenido: \" + $json.contentSnippet }\n  ],\n  max_tokens: 4000,\n  temperature: 0.7\n}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -48,
+        -16
+      ],
+      "id": "920ffedf-52e3-43fc-a9d8-d0c9bc56096b",
+      "name": "Groq",
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Groq"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 1,
+        "options": {
+          "search": "={{ $('RSS Feed Trigger').item.json.title }}",
+          "status": "=publish,draft,pending,future"
+        }
+      },
+      "type": "n8n-nodes-base.wordpress",
+      "typeVersion": 1,
+      "position": [
+        176,
+        -16
+      ],
+      "id": "bf693009-32c1-4ec7-82af-260a06358123",
+      "name": "Buscar si existe",
+      "alwaysOutputData": true,
+      "credentials": {
+        "wordpressApi": {
+          "name": "Wordpress account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "17e6f7fa-0269-4a37-8cc1-991144285c75",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        368,
+        -16
+      ],
+      "id": "74562409-c0b7-46e8-855c-7656b75cc6f0",
+      "name": "Esta duplicado?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "806573ee-94e9-485f-ba26-2ab142e8b46c",
+              "leftValue": "={{ $json.choices[0].message.content }}",
+              "rightValue": "Ninguno",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1360,
+        -16
+      ],
+      "id": "b2a2b140-82ff-4d9b-b938-9d116a9d5e6c",
+      "name": "Se invento datos?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: \"openai/gpt-oss-120b\", temperature: 0, max_tokens: 8000, reasoning_effort: \"low\", messages: [ { role: \"system\", content: \"Eres el corrector del blog. Te paso un articulo en HTML, el resumen ORIGINAL de la noticia y una lista de DATOS que no aparecen en el original. Corrige solo esos datos para que el articulo no afirme nada que no este en el original. Las citas textuales entre comillas que no aparecen en el original son inventadas: elimina la frase entera o reescribela sin comillas y sin atribuirsela a nadie. No cambies ninguna otra frase. Responde exactamente con este formato: una linea con ===ARTICULO===, despues el articulo completo corregido en HTML, despues una linea con ===CAMBIOS=== y despues la lista numerada de frases que has cambiado, cada una con dos lineas: Antes: «frase original» y Ahora: «frase corregida», o Ahora: (frase eliminada) si la has quitado. En la lista pon el texto sin etiquetas HTML.\" }, { role: \"user\", content: \"ORIGINAL:\\n\" + $(\"RSS Feed Trigger\").item.json.title + \"\\n\" + $(\"RSS Feed Trigger\").item.json.contentSnippet + \"\\n\\nDATOS A CORREGIR:\\n\" + $json.choices[0].message.content + \"\\n\\nARTICULO:\\n\" + $(\"Create a post\").item.json.content.raw } ] }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1584,
+        -96
+      ],
+      "id": "f9d134e6-0b4b-4187-80be-bbb0d076eb9b",
+      "name": "Groq corrector",
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Groq"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "postId": "={{ $('Create a post').item.json.id }}",
+        "updateFields": {
+          "content": "={{ $json.choices[0].message.content.split('===CAMBIOS===')[0].replace('===ARTICULO===', '').trim() }}"
+        }
+      },
+      "type": "n8n-nodes-base.wordpress",
+      "typeVersion": 1,
+      "position": [
+        1744,
+        -96
+      ],
+      "id": "9d95c596-211a-470a-8920-77ca5de89533",
+      "name": "Guardar correccion",
+      "credentials": {
+        "wordpressApi": {
+          "name": "Wordpress account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: \"openai/gpt-oss-120b\", temperature: 0, max_tokens: 4000, reasoning_effort: \"medium\", messages: [ { role: \"system\", content: \"Eres un verificador de datos. Te paso el texto ORIGINAL de una noticia y un texto REESCRITO por otra IA. Busca solo datos verificables del texto reescrito que no aparezcan en el original: cifras, fechas, nombres propios, lugares, nacionalidades, estudios y citas textuales entre comillas. No cuentes frases reformuladas, opiniones ni adjetivos. Responde en espanol con como mucho 5 lineas, una por dato, empezando por un guion. Si no hay ninguno, responde exactamente: Ninguno.\" }, { role: \"user\", content: \"ORIGINAL:\\nTitulo: \" + $(\"RSS Feed Trigger\").item.json.title + \"\\n\" + $(\"RSS Feed Trigger\").item.json.contentSnippet + \"\\n\\nREESCRITO:\\n\" + $(\"Create a post\").item.json.content.raw } ] }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1184,
+        -16
+      ],
+      "id": "f1720b66-ba86-49fa-87b6-ba1c9a7325fa",
+      "name": "Groq Verificador",
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Groq"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "TU_CHAT_ID",
+        "text": "=📝 Nuevo borrador #{{ $('Create a post').item.json.id }}: {{ $('Create a post').item.json.title.rendered }}\n\n🛠️ La IA había añadido datos que no están en la fuente y se han corregido solos:\n\n{{ $('Groq corrector').item.json.choices[0].message.content.split('===CAMBIOS===')[1].trim() }}\n\nRevísalo: http://localhost:8080/wp-admin/post.php?post={{ $('Create a post').item.json.id }}&action=edit",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1936,
+        -96
+      ],
+      "id": "ea55928b-9304-4efb-bae0-62970e7a7013",
+      "name": "Telegram- Avisar borrador1",
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "RSS Feed Trigger": {
+      "main": [
+        [
+          {
+            "node": "Groq",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a post": {
+      "main": [
+        [
+          {
+            "node": "Groq Verificador",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch categorias": {
+      "main": [
+        [
+          {
+            "node": "Cat IA",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Cat BD",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Cat Tecno",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cat IA": {
+      "main": [
+        [
+          {
+            "node": "Create a post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cat BD": {
+      "main": [
+        [
+          {
+            "node": "Create a post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cat Tecno": {
+      "main": [
+        [
+          {
+            "node": "Create a post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq": {
+      "main": [
+        [
+          {
+            "node": "Buscar si existe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar si existe": {
+      "main": [
+        [
+          {
+            "node": "Esta duplicado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Esta duplicado?": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Switch categorias",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Se invento datos?": {
+      "main": [
+        [
+          {
+            "node": "Groq corrector",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram- Avisar borrador",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq corrector": {
+      "main": [
+        [
+          {
+            "node": "Guardar correccion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar correccion": {
+      "main": [
+        [
+          {
+            "node": "Telegram- Avisar borrador1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Verificador": {
+      "main": [
+        [
+          {
+            "node": "Se invento datos?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "pinData": {},
+  "active": false,
+  "tags": []
+}

@@ -1,0 +1,4 @@
+# datos que generan los contenedores (base de datos de n8n, credenciales cifradas, WordPress)
+wordpress-data/
+n8n-data/
+.env
